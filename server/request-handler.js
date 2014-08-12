@@ -8,7 +8,7 @@ var exports = module.exports = {};
 var database = {};
 database.results = [];
 
-exports.handler = function(request, response) {
+exports.handleRequest = function(request, response) {
   /* the 'request' argument comes from nodes http module. It includes info about the
   request - such as what URL the browser is requesting. */
 
@@ -32,30 +32,31 @@ exports.handler = function(request, response) {
    * anything back to the client until you do. The string you pass to
    * response.end() will be the body of the response - i.e. what shows
    * up in the browser.*/
-   if (request.url === "/classes/room1" && request.method === "GET") {
-      response.writeHead(statusCodeForGet, headers);
-      console.log("Here is the get.");
-      console.log(database.results);
-      response.end(JSON.stringify({results: database.results}));
-   }
 
-   else if (request.url === "/classes/room1" && request.method === "POST") {
+    if(request.method === "OPTIONS") {
       response.writeHead(statusCodeForPost, headers);
+      response.end("End of options");
+    } else if ((request.url === "/classes/room1" || request.url === "/classes/messages")
+        && request.method === "GET") {
+      response.writeHead(statusCodeForGet, headers);
+      console.log(database);
+      response.end(JSON.stringify(database));
+   } else if((request.url === "/classes/room1" || request.url === "/classes/messages")
+            && request.method === "POST") {
       var body = '';
       request.on('data', function(data) {
         body += data;
       });
       request.on('end', function() {
-        console.log("Post x1");
         var post = database.results.push(JSON.parse(body));
       });
-      console.log("Here is the post");
-      console.log(database);
-      response.end("201");
-  } else if (request.method === "OPTIONS") {
-      var results = [];
-      response.end(201, defaultCorsHeaders);
-  }
+      response.writeHead(statusCodeForPost, headers);
+      response.end("End of post.");
+
+    } else if(request.url.indexOf('/classes') === -1){
+      response.writeHead(404, headers);
+      response.end("Nonexistent file.");
+    }
 };
 
 /* These headers will allow Cross-Origin Resource Sharing (CORS).
