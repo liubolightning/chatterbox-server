@@ -4,8 +4,11 @@
  * You'll have to figure out a way to export this function from
  * this file and include it in basic-server.js so that it actually works.
  * *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html. */
+var exports = module.exports = {};
+var database = {};
+database.results = [];
 
-var handleRequest = function(request, response) {
+exports.handler = function(request, response) {
   /* the 'request' argument comes from nodes http module. It includes info about the
   request - such as what URL the browser is requesting. */
 
@@ -14,7 +17,8 @@ var handleRequest = function(request, response) {
 
   console.log("Serving request type " + request.method + " for url " + request.url);
 
-  var statusCode = 200;
+  var statusCodeForGet = 200;
+  var statusCodeForPost = 201;
 
   /* Without this line, this server wouldn't work. See the note
    * below about CORS. */
@@ -23,13 +27,35 @@ var handleRequest = function(request, response) {
   headers['Content-Type'] = "text/plain";
 
   /* .writeHead() tells our server what HTTP status code to send back */
-  response.writeHead(statusCode, headers);
 
   /* Make sure to always call response.end() - Node will not send
    * anything back to the client until you do. The string you pass to
    * response.end() will be the body of the response - i.e. what shows
    * up in the browser.*/
-  response.end("Hello, World!");
+   if (request.url === "/classes/room1" && request.method === "GET") {
+      response.writeHead(statusCodeForGet, headers);
+      console.log("Here is the get.");
+      console.log(database.results);
+      response.end(JSON.stringify({results: database.results}));
+   }
+
+   else if (request.url === "/classes/room1" && request.method === "POST") {
+      response.writeHead(statusCodeForPost, headers);
+      var body = '';
+      request.on('data', function(data) {
+        body += data;
+      });
+      request.on('end', function() {
+        console.log("Post x1");
+        var post = database.results.push(JSON.parse(body));
+      });
+      console.log("Here is the post");
+      console.log(database);
+      response.end("201");
+  } else if (request.method === "OPTIONS") {
+      var results = [];
+      response.end(201, defaultCorsHeaders);
+  }
 };
 
 /* These headers will allow Cross-Origin Resource Sharing (CORS).
